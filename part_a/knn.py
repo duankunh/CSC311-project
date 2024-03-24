@@ -66,22 +66,28 @@ def main():
     # chosen k*.                                                        #
     #####################################################################
     k_list = [1, 6, 11, 16, 21, 26]
-    user_list, item_list = [], []
+    user_list_val, item_list_val = [], []
+    user_list_test, item_list_test = [], []
+    
     for k in k_list:
-        user_list.append(knn_impute_by_user(matrix, valid_data, k))
-        item_list.append(knn_impute_by_item(matrix, valid_data, k))
+        #Validation data accuracy
+        user_list_val.append(knn_impute_by_user(sparse_matrix, val_data, k))
+        item_list_val.append(knn_impute_by_item(sparse_matrix, val_data, k))
+        #Test data accuracy
+        user_list_test.append(knn_impute_by_user(sparse_matrix, test_data, k))
+        item_list_test.append(knn_impute_by_item(sparse_matrix, test_data, k))
     
     #plotting
     plt.title("K by User and Item Comparison")
-    plt.plot(k_list, user_list, label="User-Based")
-    plt.plot(k_list, item_list, label="Item-Based")
+    plt.plot(k_list, user_list_val, label="User-Based")
+    plt.plot(k_list, item_list_val, label="Item-Based")
     plt.xlabel("K values")
     plt.ylabel("Acurracy")
     plt.show()
 
-    max_acc_index = user_list.index(max(user_list))
+    max_acc_index = user_list.index(max(user_list_test))
     k_selected = k_list[max_acc_index]
-    print('The test accuracy with the best k is:', max(user_list))
+    print('The test accuracy with the best k is:', max(user_list_test))
     return k_selected
     #####################################################################
     #                       END OF YOUR CODE                            #
