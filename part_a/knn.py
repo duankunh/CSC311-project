@@ -85,9 +85,11 @@ def main():
     plt.ylabel("Acurracy")
     plt.show()
 
+    #Selecting the best k on a user-based approach
     max_acc_index = user_list_test.index(max(user_list_test))
     k_selected = k_list[max_acc_index]
     print('The test accuracy with the best k is:', max(user_list_test))
+    print('The best k is:', k_selected)
     return k_selected
     #####################################################################
     #                       END OF YOUR CODE                            #
