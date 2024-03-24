@@ -1,6 +1,6 @@
 from sklearn.impute import KNNImputer
 from utils import *
-
+import matplotlib.pyplot as plt
 
 def knn_impute_by_user(matrix, valid_data, k):
     """ Fill in the missing values using k-Nearest Neighbors based on
@@ -37,7 +37,12 @@ def knn_impute_by_item(matrix, valid_data, k):
     # TODO:                                                             #
     # Implement the function as described in the docstring.             #
     #####################################################################
-    acc = None
+    nbrs = KNNImputer(n_neighbors=k)
+    # We use NaN-Euclidean distance measure.
+    dict = load_valid_csv()
+    mat = nbrs.fit_transform(matrix, **dict)
+    acc = sparse_matrix_evaluate(valid_data, mat)
+    print("Validation Accuracy: {}".format(acc))
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
@@ -60,7 +65,24 @@ def main():
     # the best performance and report the test accuracy with the        #
     # chosen k*.                                                        #
     #####################################################################
-    pass
+    k_list = [1, 6, 11, 16, 21, 26]
+    user_list, item_list = [], []
+    for k in k_list:
+        user_list.append(knn_impute_by_user(matrix, valid_data, k))
+        item_list.append(knn_impute_by_item(matrix, valid_data, k))
+    
+    #plotting
+    plt.title("K by User and Item Comparison")
+    plt.plot(k_list, user_list, label="User-Based")
+    plt.plot(k_list, item_list, label="Item-Based")
+    plt.xlabel("K values")
+    plt.ylabel("Acurracy")
+    plt.show()
+
+    max_acc_index = user_list.index(max(user_list))
+    k_selected = k_list[max_acc_index]
+    print('The test accuracy with the best k is:', max(user_list))
+    return k_selected
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
