@@ -91,12 +91,16 @@ def main():
     plt.legend(["User-Based", "Item-Based"])
     plt.show()
 
-    #Selecting the best k on a user-based approach
-    max_acc_index = user_list_test.index(max(user_list_test))
-    k_selected = k_list[max_acc_index]
-    print('The test accuracy with the best k is:', max(user_list_test))
-    print('The best k is:', k_selected)
-    return k_selected
+    #Selecting the best k on a user-based & item-based approach
+    user_max_acc_index = user_list_test.index(max(user_list_test))
+    item_max_acc_index = item_list_test.index(max(item_list_test))
+    k_selected_by_user = k_list[user_max_acc_index]
+    k_selected_by_item = k_list[item_max_acc_index]
+    print('The user-based test accuracy with the best k is:', max(user_list_test))
+    print('The best k for user-based collaborative filtering is:', k_selected_by_user)
+    print('The item-based test accuracy with the best k is:', max(item_list_test))
+    print('The best k for item-based collaborative filtering is:', k_selected_by_item)
+    return k_selected_by_user, k_selected_by_item
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
