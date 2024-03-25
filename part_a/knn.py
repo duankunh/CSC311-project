@@ -39,10 +39,11 @@ def knn_impute_by_item(matrix, valid_data, k):
     #####################################################################
     nbrs = KNNImputer(n_neighbors=k)
     # We use NaN-Euclidean distance measure.
-    dict = load_valid_csv()
-    mat = nbrs.fit_transform(matrix, **dict)
-    acc = sparse_matrix_evaluate(valid_data, mat)
-    print("Validation Accuracy: {}".format(acc))
+    transposed_mat = np.transpose(matrix)
+    mat = nbrs.fit_transform(transposed_mat)
+    untransposed_mat = np.transpose(mat)
+    acc = sparse_matrix_evaluate(valid_data, untransposed_mat)
+    print("Item-based Validation Accuracy: {}".format(acc))
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
@@ -68,14 +69,18 @@ def main():
     k_list = [1, 6, 11, 16, 21, 26]
     user_list_val, item_list_val = [], []
     user_list_test, item_list_test = [], []
-    
+
     for k in k_list:
+        print("Validation and Test Accuracy for k =", k)
         #Validation data accuracy
+        print("Validation")
         user_list_val.append(knn_impute_by_user(sparse_matrix, val_data, k))
         item_list_val.append(knn_impute_by_item(sparse_matrix, val_data, k))
         #Test data accuracy
+        print("Test")
         user_list_test.append(knn_impute_by_user(sparse_matrix, test_data, k))
         item_list_test.append(knn_impute_by_item(sparse_matrix, test_data, k))
+        print("\n")
     
     #plotting
     plt.title("K by User and Item Comparison")
@@ -83,6 +88,7 @@ def main():
     plt.plot(k_list, item_list_val, label="Item-Based")
     plt.xlabel("K values")
     plt.ylabel("Acurracy")
+    plt.legend(["User-Based", "Item-Based"])
     plt.show()
 
     #Selecting the best k on a user-based approach
