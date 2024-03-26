@@ -9,6 +9,8 @@ import torch.utils.data
 import numpy as np
 import torch
 
+import matplotlib.pyplot as plt
+
 
 def load_data(base_path="../data"):
     """ Load the data in PyTorch Tensor.
@@ -70,7 +72,12 @@ class AutoEncoder(nn.Module):
         # Implement the function as described in the docstring.             #
         # Use sigmoid activations for f and g.                              #
         #####################################################################
-        out = inputs
+        sigmoid = nn.Sigmoid()
+        g_bias = torch.unsqueeze(self.g.bias, 1)  # make shape = 10, 1
+        h_bias = torch.unsqueeze(self.h.bias, 1)  # make shape = 1774, 1
+        g = sigmoid(self.g.weight @ inputs.mT + g_bias)
+        out = sigmoid(self.h.weight @ g + h_bias)
+        out = out.T
         #####################################################################
         #                       END OF YOUR CODE                            #
         #####################################################################
@@ -90,8 +97,12 @@ def train(model, lr, lamb, train_data, zero_train_data, valid_data, num_epoch):
     :param num_epoch: int
     :return: None
     """
-    # TODO: Add a regularizer to the cost function. 
-    
+    # TODO: Add a regularizer to the cost function.
+    # NOTE: for plotting
+    epochs = []
+    train_cost = []
+    valid_accuracy = []
+
     # Tell PyTorch you are training the model.
     model.train()
 
@@ -119,9 +130,18 @@ def train(model, lr, lamb, train_data, zero_train_data, valid_data, num_epoch):
             train_loss += loss.item()
             optimizer.step()
 
+        # TODO: add regularization
+        train_loss += lamb / 2 * model.get_weight_norm()
+
         valid_acc = evaluate(model, zero_train_data, valid_data)
         print("Epoch: {} \tTraining Cost: {:.6f}\t "
               "Valid Acc: {}".format(epoch, train_loss, valid_acc))
+
+        # NOTE: for plotting
+        epochs.append(epoch)
+        train_cost.append(train_loss)
+        valid_accuracy.append(valid_acc)
+    return epochs, train_cost, valid_accuracy
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
@@ -162,16 +182,39 @@ def main():
     # validation set.                                                   #
     #####################################################################
     # Set model hyperparameters.
-    k = None
-    model = None
+    # k in {10, 50, 100, 200, 500}
+    k = 10
+    # num questions in valid_data
+    num_question = train_matrix.shape[1]
+    # print(num_question)
+    model = AutoEncoder(num_question, k)
 
     # Set optimization hyperparameters.
-    lr = None
-    num_epoch = None
-    lamb = None
+    lr = 0.01
+    num_epoch = 125
+    lamb = 0.01  # e) tune {0.001, 0.01, 0.1, 1}
 
-    train(model, lr, lamb, train_matrix, zero_train_matrix,
-          valid_data, num_epoch)
+    epochs, train_cost, valid_acc = train(model, lr, lamb, train_matrix, zero_train_matrix, valid_data, num_epoch)
+
+    # getting test accuracy of the model
+    acc = evaluate(model, zero_train_matrix, test_data)
+    print('Test accuracy: ', acc)
+    # plot
+    fig, ax = plt.subplots(1, 2)
+    # train loss vs epochs
+    ax[0].plot(epochs, train_cost)
+    ax[0].set_xlabel('Epoch number')
+    ax[0].set_ylabel('Train cost')
+
+    # valid acc vs epochs
+    ax[1].plot(epochs, valid_acc)
+    ax[1].set_xlabel('Epoch number')
+    ax[1].set_ylabel('Valid accuracy')
+
+    fig.tight_layout()
+
+    plt.savefig('q3d.png')
+    plt.show()
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
