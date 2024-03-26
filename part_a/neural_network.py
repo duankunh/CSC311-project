@@ -121,10 +121,12 @@ def train(model, lr, lamb, train_data, zero_train_data, valid_data, num_epoch):
             output = model(inputs)
 
             # Mask the target to only compute the gradient of valid entries.
-            nan_mask = np.isnan(train_data[user_id].unsqueeze(0).numpy())
-            target[0][nan_mask] = output[0][nan_mask]
+            nan_mask = np.isnan(train_data[user_id].numpy())
+            nan_mask = torch.from_numpy(nan_mask).unsqueeze(0)  # Unsqueeze mask to match input shape
 
-            loss = torch.sum((output - target) ** 2.)
+            target_masked = torch.where(nan_mask, output, target)  # Use torch.where to apply mask
+
+            loss = torch.sum((output - target_masked) ** 2.)
             loss.backward()
 
             train_loss += loss.item()
