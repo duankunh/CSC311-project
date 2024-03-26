@@ -97,7 +97,7 @@ def update_u_z(train_data, lr, u, z):
     return u, z
 
 
-def als(train_data, k, lr, num_iteration, losses):
+def als(train_data, k, lr, num_iteration, valid_data, plot=True):
     """ Performs ALS algorithm, here we use the iterative solution - SGD 
     rather than the direct solution.
 
@@ -114,15 +114,39 @@ def als(train_data, k, lr, num_iteration, losses):
     z = np.random.uniform(low=0, high=1 / np.sqrt(k),
                           size=(len(set(train_data["question_id"])), k))
 
-    losses.append(squared_error_loss(train_data, u, z))
     #####################################################################
     # TODO:                                                             #
     # Implement the function as described in the docstring.             #
     #####################################################################
+    train_loss = []
+    valid_loss = []
+    train_acc = []
+    valid_acc = []
+
     for i in range(num_iteration):
         u, z = update_u_z(train_data, lr, u, z)
-        if i % 10 == 0:
-            losses.append(squared_error_loss(train_data, u, z))
+        if i % 100 == 0 and plot:
+            mat = np.dot(u, np.transpose(z))
+            # Record the current training and validation loss values.
+            train_loss.append(squared_error_loss(train_data, u, z))
+            valid_loss.append(squared_error_loss(valid_data, u, z))
+            train_acc.append(sparse_matrix_evaluate(train_data, mat))
+            valid_acc.append(sparse_matrix_evaluate(valid_data, mat))
+
+    if plot:
+        plt.title("Training Curve Showing Training and Validation Loss at each Iteration")
+        plt.plot(train_loss, label="Training Loss")
+        # plt.plot(valid_loss, label="Validation Loss")
+        plt.xlabel("Iterations")
+        plt.ylabel("Loss")
+        plt.show()
+
+        plt.title("Training Curve Showing Training and Validation Accuracy at each Iteration")
+        plt.plot(train_acc, label="Training Accuracy")
+        # plt.plot(valid_acc, label="Validation Accuracy")
+        plt.xlabel("Iterations")
+        plt.ylabel("Accuracy")
+        plt.show()
     mat = np.dot(u, np.transpose(z))
     #####################################################################
     #                       END OF YOUR CODE                            #
@@ -165,8 +189,8 @@ def main():
     #######################################
 
     losses = []
-    k = 5
-    als_matrix = als(train_data, k, 0.1, 500, losses)
+    k = 10
+    als_matrix = als(train_data, k, 0.01, 3000, val_data, True)
     print(f"Validation accuracy: {sparse_matrix_evaluate(val_data, als_matrix)}")
     # ks = [1, 5, 9, 13, 15]
     # validation_accuracy = []
@@ -178,9 +202,7 @@ def main():
     # best_matrix = als(train_data, ks[best_k_index], 0.66, 10, losses)
     # print(f"Best k is k = {ks[best_k_index]}")
     # print(f"Validation accuracy: {validation_accuracy[best_k_index]}")
-    plt.plot(losses)
     # print(f"Test accuracy: {sparse_matrix_evaluate(test_data, als_matrix)}")
-    plt.show()
     #####################################################################
     #                       END OF YOUR CODE                            #
     #####################################################################
