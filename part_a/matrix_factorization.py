@@ -86,6 +86,8 @@ def update_u_z(train_data, lr, u, z):
     error = prediction - c
     
     # Update parameters u and z using gradients
+    u = u.copy()
+    z = z.copy()
     u_gradient = -error * z[q]
     z_gradient = -error * u[n]
     u[n] -= lr * u_gradient
@@ -124,8 +126,11 @@ def als(train_data, k, lr, num_iteration, valid_data, plot=True):
     valid_acc = []
 
     for i in range(num_iteration):
-        u, z = update_u_z(train_data, lr, u, z)
-        if i % 100 == 0 and plot:
+        for _ in range(len(train_data["user_id"])):
+            u, _ = update_u_z(train_data, lr, u, z)
+        for _ in range(len(train_data["question_id"])):
+            _, z = update_u_z(train_data, lr, u, z)
+        if plot:
             mat = np.dot(u, np.transpose(z))
             # Record the current training and validation loss values.
             train_loss.append(squared_error_loss(train_data, u, z))
@@ -189,8 +194,9 @@ def main():
     #######################################
 
     losses = []
-    k = 10
-    als_matrix = als(train_data, k, 0.01, 3000, val_data, True)
+    k = 5
+    als_matrix = als(train_data, k, 0.0001, 20, val_data)
+    print(f"Training accuracy: {sparse_matrix_evaluate(train_data, als_matrix)}")
     print(f"Validation accuracy: {sparse_matrix_evaluate(val_data, als_matrix)}")
     # ks = [1, 5, 9, 13, 15]
     # validation_accuracy = []
